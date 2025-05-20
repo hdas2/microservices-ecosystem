@@ -1,0 +1,14 @@
+apiVersion: v2
+name: shared-dbs
+description: Shared Databases for Microservices
+version: 1.0.0
+dependencies:
+- name: mysql
+  version: 9.10.0
+  repository: https://charts.bitnami.com/bitnami
+- name: mongodb
+  version: 13.0.0
+  repository: https://charts.bitnami.com/bitnami
+- name: redis
+  version: 17.0.0
+  repository: https://charts.bitnami.com/bitnami

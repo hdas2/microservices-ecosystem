@@ -1,0 +1,57 @@
+gateways:
+  enabled: true
+  istio-ingressgateway:
+    enabled: true
+    autoscaleEnabled: true
+    service:
+      ports:
+        - port: 80
+          targetPort: 8080
+          name: http2
+        - port: 443
+          name: https
+
+virtualServices:
+  enabled: true
+  frontend:
+    hosts:
+      - "*"
+    gateways:
+      - istio-system/istio-gateway
+    http:
+      - match:
+          - uri:
+              prefix: /
+        route:
+          - destination:
+              host: frontend-service
+              port:
+                number: 8080
+  product-service:
+    hosts:
+      - "*"
+    gateways:
+      - istio-system/istio-gateway
+    http:
+      - match:
+          - uri:
+              prefix: /product/
+        route:
+          - destination:
+              host: product-service
+              port:
+                number: 8000
+  cart-service:
+    hosts:
+      - "*"
+    gateways:
+      - istio-system/istio-gateway
+    http:
+      - match:
+          - uri:
+              prefix: /cart/
+        route:
+          - destination:
+              host: cart-service
+              port:
+                number: 3000

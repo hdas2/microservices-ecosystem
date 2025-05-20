@@ -1,0 +1,13 @@
+{
+  "name": "cart-service",
+  "version": "1.0.0",
+  "description": "Cart service for microservices ecosystem",
+  "main": "app/server.js",
+  "scripts": {
+    "start": "node app/server.js",
+    "test": "echo 'No tests yet' && exit 0",
+    "integration-test": "echo 'No integration tests yet' && exit 0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

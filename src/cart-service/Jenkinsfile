@@ -1,0 +1,89 @@
+pipeline {
+    agent any
+    environment {
+        REGISTRY = "your-ecr-registry"
+        CLUSTER = "your-eks-cluster"
+        HELM_REPO = "https://your-helm-repo.com"
+        NAMESPACE = "production"
+    }
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    docker.build("${REGISTRY}/cart-service:${env.BUILD_NUMBER}")
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
+        stage('Push') {
+            steps {
+                script {
+                    docker.withRegistry('https://${REGISTRY}', 'ecr:ap-south-1:aws-credentials') {
+                        docker.image("${REGISTRY}/cart-service:${env.BUILD_NUMBER}").push()
+                    }
+                }
+            }
+        }
+        stage('Deploy Canary') {
+            steps {
+                script {
+                    // Deploy canary with 10% traffic
+                    sh """
+                        helm upgrade cart-service-canary ${HELM_REPO}/cart-service \
+                            --install \
+                            --namespace ${NAMESPACE} \
+                            --set image.tag=${env.BUILD_NUMBER} \
+                            --set replicaCount=1 \
+                            --set canary.enabled=true \
+                            --set canary.trafficPercent=10 \
+                            --set istio.virtualService.canary=true
+                    """
+                }
+            }
+        }
+        stage('Verify Canary') {
+            steps {
+                script {
+                    // Run integration tests against canary
+                    sh 'npm run integration-test -- --url http://cart-service-canary.${NAMESPACE}.svc.cluster.local'
+                    
+                    // Check metrics and logs for errors
+                    timeout(time: 5, unit: 'MINUTES') {
+                        waitUntil {
+                            def errors = sh(script: "kubectl logs -l app=cart-service-canary -n ${NAMESPACE} | grep ERROR | wc -l", returnStdout: true).trim()
+                            return errors == "0"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Promote to Production') {
+            steps {
+                script {
+                    // Full rollout with 100% traffic
+                    sh """
+                        helm upgrade cart-service ${HELM_REPO}/cart-service \
+                            --install \
+                            --namespace ${NAMESPACE} \
+                            --set image.tag=${env.BUILD_NUMBER} \
+                            --set replicaCount=3 \
+                            --set canary.enabled=false
+                    """
+                    
+                    // Clean up canary
+                    sh "helm uninstall cart-service-canary --namespace ${NAMESPACE}"
+                }
+            }
+        }
+    }
+    post {
+        failure {
+            // Rollback canary if failed
+            sh "helm uninstall cart-service-canary --namespace ${NAMESPACE}"
+        }
+    }
+}

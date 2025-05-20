@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shared-dbs
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/helm-charts.git
+    targetRevision: main
+    path: helm/charts/shared-dbs
+    helm:
+      values: |
+        mysql:
+          auth:
+            password: $MYSQL_PASSWORD
+        mongodb:
+          auth:
+            password: $MONGO_PASSWORD
+        redis:
+          auth:
+            password: $REDIS_PASSWORD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: shared-dbs
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true

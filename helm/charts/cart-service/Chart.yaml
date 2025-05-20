@@ -1,0 +1,10 @@
+apiVersion: v2
+name: cart-service
+description: ExpressJS Cart & Catalog Service
+version: 0.1.0
+appVersion: "1.0"
+dependencies:
+- name: mongodb
+  version: 13.0.0
+  repository: https://charts.bitnami.com/bitnami
+  condition: mongodb.enabled

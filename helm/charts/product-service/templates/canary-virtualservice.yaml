@@ -1,0 +1,24 @@
+{{- if and .Values.canary.enabled .Values.istio.enabled }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ .Chart.Name }}-canary
+  labels:
+    app: {{ .Chart.Name }}
+    version: canary
+spec:
+  hosts:
+    {{- toYaml .Values.istio.virtualService.hosts | nindent 4 }}
+  gateways:
+    {{- toYaml .Values.istio.virtualService.gateways | nindent 4 }}
+  http:
+  - route:
+    - destination:
+        host: {{ .Chart.Name }}
+        subset: stable
+      weight: {{ sub 100 .Values.canary.trafficPercent }}
+    - destination:
+        host: {{ .Chart.Name }}-canary
+        subset: canary
+      weight: {{ .Values.canary.trafficPercent }}
+{{- end }}

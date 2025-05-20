@@ -1,0 +1,44 @@
+global:
+  storageClass: "gp2"
+  namespace: shared-dbs
+
+mysql:
+  enabled: true
+  auth:
+    rootPassword: "DB_ROOT_PASSWORD"
+    username: "shared_user"
+    password: "mysql_password_123"
+    database: "shared_db"
+  primary:
+    persistence:
+      size: 10Gi
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+
+mongodb:
+  enabled: true
+  auth:
+    rootPassword: "MONGO_ROOT_PASSWORD"
+    username: "shared_user"
+    password: "mongo_password_123"
+    database: "shared_db"
+  persistence:
+    size: 10Gi
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+redis:
+  enabled: true
+  auth:
+    password: "redis_password_123"
+  master:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    persistence:
+      size: 5Gi

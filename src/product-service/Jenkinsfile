@@ -1,0 +1,19 @@
+library 'shared-library@main'
+
+canaryDeploy(
+    serviceName: "product-service",
+    registry: "your-ecr-registry",
+    helmRepo: "https://your-helm-repo.com",
+    namespace: "production",
+    testCommand: "python3.13 -m pytest tests/ --junitxml=test-results/results.xml",
+    smokeTestCommand: """
+        python -m pytest integration_tests/ \
+            --url http://product-service-canary.production.svc.cluster.local \
+            --junitxml=test-results/smoke-results.xml
+    """,
+    errorPattern: "ERROR|Exception|Critical",
+    errorThreshold: 0.01,  // 1% error rate threshold
+    canaryTrafficPercent: 10,
+    prodReplicaCount: 3,
+    verificationTimeout: 5
+)

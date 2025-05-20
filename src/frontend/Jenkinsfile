@@ -1,0 +1,89 @@
+pipeline {
+    agent any
+    environment {
+        REGISTRY = "your-ecr-registry"
+        CLUSTER = "your-eks-cluster"
+        HELM_REPO = "https://your-helm-repo.com"
+        NAMESPACE = "production"
+    }
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    docker.build("${REGISTRY}/frontend:${env.BUILD_NUMBER}")
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'php vendor/bin/phpunit'
+            }
+        }
+        stage('Push') {
+            steps {
+                script {
+                    docker.withRegistry('https://${REGISTRY}', 'ecr:ap-south-1:aws-credentials') {
+                        docker.image("${REGISTRY}/frontend:${env.BUILD_NUMBER}").push()
+                    }
+                }
+            }
+        }
+        stage('Deploy Canary') {
+            steps {
+                script {
+                    // Deploy canary with 5% traffic
+                    sh """
+                        helm upgrade frontend-canary ${HELM_REPO}/frontend \
+                            --install \
+                            --namespace ${NAMESPACE} \
+                            --set image.tag=${env.BUILD_NUMBER} \
+                            --set replicaCount=1 \
+                            --set canary.enabled=true \
+                            --set canary.trafficPercent=5 \
+                            --set istio.virtualService.canary=true
+                    """
+                }
+            }
+        }
+        stage('Verify Canary') {
+            steps {
+                script {
+                    // Run integration tests against canary
+                    sh 'php vendor/bin/behat --config=tests/behat.yml --suite=canary'
+                    
+                    // Check metrics and logs for errors
+                    timeout(time: 10, unit: 'MINUTES') {
+                        waitUntil {
+                            def errors = sh(script: "kubectl logs -l app=frontend-canary -n ${NAMESPACE} | grep 'PHP Fatal error' | wc -l", returnStdout: true).trim()
+                            return errors == "0"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Promote to Production') {
+            steps {
+                script {
+                    // Full rollout with 100% traffic
+                    sh """
+                        helm upgrade frontend ${HELM_REPO}/frontend \
+                            --install \
+                            --namespace ${NAMESPACE} \
+                            --set image.tag=${env.BUILD_NUMBER} \
+                            --set replicaCount=4 \
+                            --set canary.enabled=false
+                    """
+                    
+                    // Clean up canary
+                    sh "helm uninstall frontend-canary --namespace ${NAMESPACE}"
+                }
+            }
+        }
+    }
+    post {
+        failure {
+            // Rollback canary if failed
+            sh "helm uninstall frontend-canary --namespace ${NAMESPACE}"
+        }
+    }
+}

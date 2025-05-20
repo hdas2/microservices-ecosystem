@@ -1,0 +1,79 @@
+prometheus:
+  enabled: true
+  server:
+    global:
+      scrape_interval: 15s
+    extraScrapeConfigs:
+      - job_name: 'product-service'
+        static_configs:
+          - targets: ['product-service:9464']
+      - job_name: 'cart-service'
+        static_configs:
+          - targets: ['cart-service:9465']
+
+grafana:
+  enabled: true
+  adminPassword: admin
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+
+loki:
+  enabled: true
+  config:
+    schema_config:
+      configs:
+        - from: 2020-10-24
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+
+tempo:
+  enabled: true
+  distributor:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+
+opentelemetry-collector:
+  enabled: true
+  mode: deployment
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+    processors:
+      batch:
+    exporters:
+      logging:
+        loglevel: debug
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+      otlp:
+        endpoint: tempo:4317
+        tls:
+          insecure: true
+      loki:
+        endpoint: http://loki:3100/loki/api/v1/push
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp, logging]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [prometheus, logging]
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [loki, logging]

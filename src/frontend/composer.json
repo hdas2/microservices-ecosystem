@@ -1,0 +1,10 @@
+{
+  "name": "frontend",
+  "description": "Frontend for microservices ecosystem",
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  }
+}

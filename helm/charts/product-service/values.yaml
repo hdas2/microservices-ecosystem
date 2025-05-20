@@ -1,0 +1,50 @@
+# Full values.yaml for product-service
+replicaCount: 3
+
+image:
+  repository: your-registry/product-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  metricsPort: 9464
+
+canary:
+  enabled: false
+  trafficPercent: 10
+  replicaCount: 1
+
+istio:
+  enabled: true
+  virtualService:
+    hosts:
+      - product-service.production.svc.cluster.local
+    gateways:
+      - istio-system/istio-gateway
+
+env:
+  OTEL_SERVICE_NAME: product-service
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+  DATABASE_URL: "mysql://shared_user:mysql_password_123@mysql.shared-dbs.svc.cluster.local:3306/shared_db"
+  REDIS_URL: "redis://:redis_password_123@redis.shared-dbs.svc.cluster.local:6379/0"
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+mysql:
+  enabled: true
+  auth:
+    database: product_db
+    username: user
+    password: "password"
+
+redis:
+  enabled: true

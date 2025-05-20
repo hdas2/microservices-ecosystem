@@ -1,0 +1,38 @@
+replicaCount: 3
+
+image:
+  repository: your-registry/cart-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+  metricsPort: 9465
+
+canary:
+  enabled: false
+  trafficPercent: 10
+  replicaCount: 1
+
+env:
+  OTEL_SERVICE_NAME: cart-service
+  MONGODB_URI: "mongodb://shared_user:mongo_password_123@mongodb.shared-dbs.svc.cluster.local:27017/shared_db?authSource=admin"
+  REDIS_URL: "redis://:redis_password_123@redis.shared-dbs.svc.cluster.local:6379/1"
+
+mongodb:
+  enabled: true
+  auth:
+    username: user
+    password: "password"
+    database: cart_db
+    rootPassword: "password"
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi

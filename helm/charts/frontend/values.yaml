@@ -1,0 +1,29 @@
+replicaCount: 3
+
+image:
+  repository: your-registry/frontend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+canary:
+  enabled: false
+  trafficPercent: 5
+  replicaCount: 1
+
+env:
+  DB_HOST: "{{ .Release.Name }}-mysql"
+  CART_SERVICE_URL: http://cart-service:3000
+  PRODUCT_SERVICE_URL: http://product-service:8000
+
+resources:
+  limits:
+    cpu: 400m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
