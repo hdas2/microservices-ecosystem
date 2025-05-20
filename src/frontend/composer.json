@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "name": "frontend/frontend",
   "description": "Frontend for microservices ecosystem",
@@ -8,3 +9,15 @@
     }
   }
 }
+=======
+{
+  "name": "frontend",
+  "description": "Frontend for microservices ecosystem",
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  }
+}
+>>>>>>> bd32c946329ca50088dd58cf9b953049bba2fc99
