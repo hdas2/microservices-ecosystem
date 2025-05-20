@@ -1,0 +1,4 @@
+src/product-service/venv
+src/cart-service/node_modules
+src/cart-service/dist
+src/product-service/__pycache__/*

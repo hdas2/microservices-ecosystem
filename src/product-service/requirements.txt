@@ -1,3 +1,11 @@
-# Python dependencies for product-service
-flask
-pytest
+fastapi
+uvicorn
+mysql-connector-python
+redis
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-mysql
+opentelemetry-instrumentation-redis
+opentelemetry-exporter-otlp
+prometheus-fastapi-instrumentator

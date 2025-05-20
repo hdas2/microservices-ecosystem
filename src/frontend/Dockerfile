@@ -26,7 +26,7 @@ COPY php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN chown -R www-data:www-data /var/www/html && \
-    chmod -R 755 /var/www/html/storage
+    chmod -R 755 /var/www/html/
 
 EXPOSE 8080
 
